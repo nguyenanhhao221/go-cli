@@ -33,3 +33,21 @@ func TestComplete(t *testing.T) {
 		t.Errorf("This task should be completed")
 	}
 }
+func TestDelete(t *testing.T) {
+	l := todo.List{}
+
+	tasks := [3]string{"foo", "bar", "baz"}
+	for _, taskName := range tasks {
+		l.Add(taskName)
+	}
+
+	_ = l.Delete(2)
+	if len(l) != 2 {
+		t.Errorf("Expected list length %d, got %d", 2, len(l))
+	}
+
+	if tasks[2] != l[1].Task {
+		t.Errorf("Expected %q, got %q", tasks[2], l[1].Task)
+	}
+
+}
