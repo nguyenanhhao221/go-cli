@@ -5,27 +5,45 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"os"
 )
+
+type wcOpts struct {
+	lines      bool
+	countBytes bool
+}
 
 func main() {
 
 	// Defining  a boolean flag -l count lints instead of words
-	var lines *bool = flag.Bool("l", false, "Count lines")
+
+	opts := wcOpts{}
+	flag.BoolVar(&opts.lines, "l", false, "Count lines")
+	flag.BoolVar(&opts.countBytes, "b", false, "Count Bytes")
+
 	// Parsing the flag provided by user
 	flag.Parse()
 
-	fmt.Println(count(os.Stdin, *lines))
+	fmt.Println(count(os.Stdin, &opts))
 }
 
-func count(r io.Reader, isCountLines bool) int {
+func count(r io.Reader, opts *wcOpts) int {
+
+	if opts.countBytes && opts.lines {
+		log.Fatal("-l and -b cannot be use together")
+	}
 	// Create a new scanner to prepare to read from io.Reader
 	scanner := bufio.NewScanner(r)
 
 	// If the count lines flag is not set, we want to count words
-	if !isCountLines {
+	if !opts.lines {
 		// Define the scanner split type to words (default is split by lines)
 		scanner.Split(bufio.ScanWords)
+	}
+
+	if opts.countBytes {
+		scanner.Split(bufio.ScanBytes)
 	}
 
 	// Defining a counter
