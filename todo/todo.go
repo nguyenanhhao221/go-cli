@@ -12,8 +12,10 @@ type item struct {
 	CompletedAt time.Time
 }
 
+// List represents a list of ToDo items
 type List []item
 
+// Add creates a ToDo item and append it to the List
 func (l *List) Add(task string) {
 	t := item{
 		Task:        task,
@@ -24,6 +26,8 @@ func (l *List) Add(task string) {
 	*l = append(*l, t)
 }
 
+// Complete method mark a ToDo item as completed by settings Done = true
+// And CompletedAt to the current time
 func (l *List) Complete(i int) error {
 	ls := *l
 	if i <= 0 || i > len(ls) {
@@ -36,6 +40,7 @@ func (l *List) Complete(i int) error {
 	return nil
 }
 
+// Delete method deletes a ToDo item from the list
 func (l *List) Delete(i int) error {
 	ls := *l
 	if i <= 0 || i > len(ls) {
