@@ -30,9 +30,10 @@ func main() {
 	list := flag.Bool("list", false, "List the tasks")
 	complete := flag.Int("complete", 0, "Item to be completed")
 	del := flag.Int("delete", 0, "Item to be deleted")
+	verbose := flag.Bool("verbose", false, "Enable verbose for more information in the output")
 	flag.Parse()
 
-	l := &todo.List{}
+	l := &todo.List{VerboseMode: *verbose}
 
 	if err := l.Get(todoFileName); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -42,7 +43,7 @@ func main() {
 	switch {
 	case len(os.Args) == 1:
 		// List current todo items
-		for _, item := range *l {
+		for _, item := range l.Items {
 			fmt.Println(item.Task)
 		}
 	case *add:

@@ -85,6 +85,7 @@ func TestTodoCLI(t *testing.T) {
 			t.Errorf("Expected %q, got %s instead \n", expected, out)
 		}
 	})
+
 	t.Run("DeleteTask", func(t *testing.T) {
 		var cmd *exec.Cmd
 		cmd = exec.Command(cmdPath, "-delete", "1")

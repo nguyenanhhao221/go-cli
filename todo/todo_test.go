@@ -11,8 +11,8 @@ func TestAdd(t *testing.T) {
 
 	taskName := "New Task"
 	l.Add(taskName)
-	if l[0].Task != taskName {
-		t.Errorf("Expected %q, got %q instead", taskName, l[0].Task)
+	if l.Items[0].Task != taskName {
+		t.Errorf("Expected %q, got %q instead", taskName, l.Items[0].Task)
 	}
 }
 
@@ -21,16 +21,16 @@ func TestComplete(t *testing.T) {
 
 	taskName := "New Task"
 	l.Add(taskName)
-	if l[0].Task != taskName {
-		t.Errorf("Expected %q, got %q instead", taskName, l[0].Task)
+	if l.Items[0].Task != taskName {
+		t.Errorf("Expected %q, got %q instead", taskName, l.Items[0].Task)
 	}
 
-	if l[0].Done {
+	if l.Items[0].Done {
 		t.Errorf("New Task should not be completed")
 	}
 
 	_ = l.Complete(1)
-	if !l[0].Done {
+	if !l.Items[0].Done {
 		t.Errorf("This task should be completed")
 	}
 }
@@ -43,12 +43,12 @@ func TestDelete(t *testing.T) {
 	}
 
 	_ = l.Delete(2)
-	if len(l) != 2 {
-		t.Errorf("Expected list length %d, got %d", 2, len(l))
+	if len(l.Items) != 2 {
+		t.Errorf("Expected list length %d, got %d", 2, len(l.Items))
 	}
 
-	if tasks[2] != l[1].Task {
-		t.Errorf("Expected %q, got %q", tasks[2], l[1].Task)
+	if tasks[2] != l.Items[1].Task {
+		t.Errorf("Expected %q, got %q", tasks[2], l.Items[1].Task)
 	}
 
 }
@@ -60,8 +60,8 @@ func TestSaveGet(t *testing.T) {
 	taskName := "New Task"
 	l1.Add(taskName)
 
-	if l1[0].Task != taskName {
-		t.Errorf("Expected %q, got %q instead", taskName, l1[0].Task)
+	if l1.Items[0].Task != taskName {
+		t.Errorf("Expected %q, got %q instead", taskName, l1.Items[0].Task)
 	}
 
 	tmpFile, err := os.CreateTemp("", "")
@@ -78,8 +78,8 @@ func TestSaveGet(t *testing.T) {
 		t.Fatalf("Error saving list to file %s", err)
 	}
 
-	if l1[0].Task != l2[0].Task {
-		t.Errorf("Task %q, should match %q task", l1[0].Task, l2[0].Task)
+	if l1.Items[0].Task != l2.Items[0].Task {
+		t.Errorf("Task %q, should match %q task", l1.Items[0].Task, l2.Items[0].Task)
 	}
 
 }

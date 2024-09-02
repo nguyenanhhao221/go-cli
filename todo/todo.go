@@ -15,8 +15,11 @@ type item struct {
 	Done        bool
 }
 
-// List represents a list of ToDo items
-type List []item
+// List represents a list of ToDo items and Verbose mode
+type List struct {
+	Items       []item
+	VerboseMode bool
+}
 
 // Add creates a ToDo item and append it to the List
 func (l *List) Add(task string) {
@@ -26,19 +29,19 @@ func (l *List) Add(task string) {
 		CreatedAt:   time.Now(),
 		CompletedAt: time.Time{},
 	}
-	*l = append(*l, t)
+	l.Items = append(l.Items, t)
 }
 
 // Complete method mark a ToDo item as completed by settings Done = true
 // And CompletedAt to the current time
 func (l *List) Complete(i int) error {
 	ls := *l
-	if i <= 0 || i > len(ls) {
+	if i <= 0 || i > len(ls.Items) {
 		return fmt.Errorf("item %d does not exist", i)
 	}
 
-	ls[i-1].Done = true
-	ls[i-1].CompletedAt = time.Now()
+	ls.Items[i-1].Done = true
+	ls.Items[i-1].CompletedAt = time.Now()
 
 	return nil
 }
@@ -46,17 +49,17 @@ func (l *List) Complete(i int) error {
 // Delete method deletes a ToDo item from the list
 func (l *List) Delete(i int) error {
 	ls := *l
-	if i <= 0 || i > len(ls) {
+	if i <= 0 || i > len(ls.Items) {
 		return fmt.Errorf("item %d does not exist", i)
 	}
 
-	*l = append(ls[:i-1], ls[i:]...)
+	l.Items = append(ls.Items[:i-1], ls.Items[i:]...)
 	return nil
 
 }
 
 func (l *List) Save(filename string) error {
-	js, err := json.Marshal(l)
+	js, err := json.Marshal(l.Items)
 	if err != nil {
 		return err
 	}
@@ -73,19 +76,22 @@ func (l *List) Get(filename string) error {
 		}
 		return err
 	}
-	return json.Unmarshal(file, l)
+	return json.Unmarshal(file, &l.Items)
 }
 
 // Implements the fmt.Stringer interface
 func (l *List) String() string {
 	formated := ""
-	for k, t := range *l {
+	for k, t := range l.Items {
 		prefix := " "
 		if t.Done {
 			prefix = "X "
 		}
-
-		formated += fmt.Sprintf("%s%d: %s\n", prefix, k+1, t.Task)
+		if l.VerboseMode {
+			formated += fmt.Sprintf("%s%d: %s, Created at:%s\n", prefix, k+1, t.Task, t.CreatedAt)
+		} else {
+			formated += fmt.Sprintf("%s%d: %s\n", prefix, k+1, t.Task)
+		}
 	}
 	return formated
 }
