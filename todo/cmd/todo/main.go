@@ -7,9 +7,14 @@ import (
 	"todo"
 )
 
-const todoFileName = ".todo.json"
+var todoFileName = ".todo.json"
 
 func main() {
+	// Determine the file name to be saved
+	if os.Getenv("TODO_FILENAME") != "" {
+		todoFileName = os.Getenv("TODO_FILENAME")
+	}
+
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "%s tool. Developed By Hao Nguyen\n", os.Args[0])
 		fmt.Fprintln(flag.CommandLine.Output(), "Copyright 2024")
