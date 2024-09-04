@@ -11,11 +11,11 @@ import (
 )
 
 var (
-	binName  = "todo"
-	fileName = ".todo.json"
+	binName = "todo"
 )
 
 func TestMain(m *testing.M) {
+	os.Setenv("TODO_FILENAME", ".test_todo.json")
 	fmt.Println("Building tool....")
 	if runtime.GOOS == "windows" {
 		binName += ".exe"
@@ -31,13 +31,14 @@ func TestMain(m *testing.M) {
 	result := m.Run()
 	fmt.Println("Cleaning up...")
 	os.Remove(binName)
-	os.Remove(fileName)
+	os.Remove(os.Getenv("TODO_FILENAME"))
 
 	os.Exit(result)
 
 }
 
 func TestTodoCLI(t *testing.T) {
+	t.Setenv("TODO_FILENAME", ".test_todo.json")
 	task := "test task number 1"
 
 	dir, err := os.Getwd()
