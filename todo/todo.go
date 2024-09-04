@@ -17,8 +17,9 @@ type item struct {
 
 // List represents a list of ToDo items and Verbose mode
 type List struct {
-	Items       []item
-	VerboseMode bool
+	Items        []item
+	VerboseMode  bool
+	HideComplete bool
 }
 
 // Add creates a ToDo item and append it to the List
@@ -83,6 +84,9 @@ func (l *List) Get(filename string) error {
 func (l *List) String() string {
 	formated := ""
 	for k, t := range l.Items {
+		if l.HideComplete && t.Done {
+			continue
+		}
 		prefix := " "
 		if t.Done {
 			prefix = "X "

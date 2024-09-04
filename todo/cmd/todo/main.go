@@ -31,9 +31,10 @@ func main() {
 	complete := flag.Int("complete", 0, "Item to be completed")
 	del := flag.Int("delete", 0, "Item to be deleted")
 	verbose := flag.Bool("verbose", false, "Enable verbose for more information in the output")
+	hideComplete := flag.Bool("hide-complete", false, "Hide completed Item")
 	flag.Parse()
 
-	l := &todo.List{VerboseMode: *verbose}
+	l := &todo.List{VerboseMode: *verbose, HideComplete: *hideComplete}
 
 	if err := l.Get(todoFileName); err != nil {
 		fmt.Fprintln(os.Stderr, err)
