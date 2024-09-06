@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"time"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
@@ -74,6 +75,9 @@ func run(filename string, out io.Writer, skipPreview bool) error {
 		return nil
 	}
 
+	// Remove the tmpFile after run, but need to consider a delay , because with skip preview, the browser may not have enough time to open the file before it already deleted
+	defer os.Remove(outName)
+
 	return preview(outName)
 
 }
@@ -120,5 +124,9 @@ func preview(filename string) error {
 	if err != nil {
 		return err
 	}
-	return exec.Command(cPath, cParams...).Run()
+	e := exec.Command(cPath, cParams...).Run()
+	// Give browser 2 second delay after open the file, avoid race condition when we auto delete the created html
+	time.Sleep(2 * time.Second)
+
+	return e
 }
