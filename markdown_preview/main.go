@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
+	"runtime"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
@@ -64,7 +66,11 @@ func run(filename string, out io.Writer) error {
 	//NOTE: Here we write to an io.Writer, then later in the test we can read from this.
 	// This approach is good, since we don't need to directly return the tmp file name in the actual function. Only we need to know the tmp file when we test to compare the result.
 	fmt.Fprintln(out, outName)
-	return saveHtml(outName, htmlData)
+	if err := saveHtml(outName, htmlData); err != nil {
+		return err
+	}
+
+	return preview(outName)
 
 }
 
@@ -86,4 +92,29 @@ func parseContent(input []byte) []byte {
 
 func saveHtml(outName string, data []byte) error {
 	return os.WriteFile(outName, data, 0644)
+}
+
+func preview(filename string) error {
+	cName := ""
+	cParams := []string{}
+
+	switch runtime.GOOS {
+	case "linux":
+		cName = "xdg-open"
+	case "darwin":
+		cName = "open"
+	case "windows":
+		cName = "cmd.exe"
+		cParams = []string{"/C", "start"}
+	default:
+		return fmt.Errorf("OS is not supported")
+	}
+
+	cParams = append(cParams, filename)
+
+	cPath, err := exec.LookPath(cName)
+	if err != nil {
+		return err
+	}
+	return exec.Command(cPath, cParams...).Run()
 }
