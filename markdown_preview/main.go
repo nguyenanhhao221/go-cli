@@ -42,6 +42,7 @@ func main() {
 	}
 }
 
+// run Read all data from input file, call parseContent and saveHtml
 func run(filename string) error {
 	// Read all data from input file and check for error
 	input, err := os.ReadFile(filename)
