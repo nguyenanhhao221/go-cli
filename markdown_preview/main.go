@@ -31,21 +31,21 @@ const (
 func main() {
 	// Parse flag
 	filename := flag.String("file", "", "Markdown file to preview")
+	skipPreview := flag.Bool("s", false, "Skip auto-preview")
 	flag.Parse()
 
-	//
 	if *filename == "" {
 		flag.Usage()
 		os.Exit(1)
 	}
-	if err := run(*filename, os.Stdout); err != nil {
+	if err := run(*filename, os.Stdout, *skipPreview); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
 // run Read all data from input file, call parseContent and saveHtml
-func run(filename string, out io.Writer) error {
+func run(filename string, out io.Writer, skipPreview bool) error {
 	// Read all data from input file and check for error
 	input, err := os.ReadFile(filename)
 	if err != nil {
@@ -68,6 +68,10 @@ func run(filename string, out io.Writer) error {
 	fmt.Fprintln(out, outName)
 	if err := saveHtml(outName, htmlData); err != nil {
 		return err
+	}
+
+	if skipPreview {
+		return nil
 	}
 
 	return preview(outName)
