@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"html/template"
 	"io"
 	"os"
 	"os/exec"
@@ -15,45 +16,53 @@ import (
 )
 
 const (
-	header = `<!DOCTYPE html>
+	defaultTemplate = `<!DOCTYPE html>
 <html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=utf-8">
-<title>Markdown Preview Tool</title>
+<title>{{ .Title }}</title>
 </head>
 <body>
-	`
-	footer = `
+	{{ .Body }}
 </body>
 </html>
 `
 )
 
+type content struct {
+	Title string
+	Body  template.HTML
+}
+
 func main() {
 	// Parse flag
 	filename := flag.String("file", "", "Markdown file to preview")
 	skipPreview := flag.Bool("s", false, "Skip auto-preview")
+	tFname := flag.String("t", "", "Alternative template file name")
 	flag.Parse()
 
 	if *filename == "" {
 		flag.Usage()
 		os.Exit(1)
 	}
-	if err := run(*filename, os.Stdout, *skipPreview); err != nil {
+	if err := run(*filename, *tFname, os.Stdout, *skipPreview); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
 // run Read all data from input file, call parseContent and saveHtml
-func run(filename string, out io.Writer, skipPreview bool) error {
+func run(filename, tFname string, out io.Writer, skipPreview bool) error {
 	// Read all data from input file and check for error
 	input, err := os.ReadFile(filename)
 	if err != nil {
 		return err
 	}
 
-	htmlData := parseContent(input)
+	htmlData, err := parseContent(input, tFname)
+	if err != nil {
+		return err
+	}
 	// Create a temp file to save the html later
 	tmp, err := os.CreateTemp("", "mdp*.html")
 	if err != nil {
@@ -82,19 +91,36 @@ func run(filename string, out io.Writer, skipPreview bool) error {
 
 }
 
-func parseContent(input []byte) []byte {
+func parseContent(input []byte, tFname string) ([]byte, error) {
 	// Parse the input markdown file through blackfriday and bluemonday to get sanitize html
 	out := blackfriday.Run(input)
 	body := bluemonday.UGCPolicy().SanitizeBytes(out)
 
+	t, err := template.New("mdp").Parse(defaultTemplate)
+	if err != nil {
+		return nil, err
+	}
+
+	// If user provide the alternative template file, replace the template
+	if tFname != "" {
+		t, err = template.ParseFiles(tFname)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	c := content{
+		Title: "Markdown Preview Tool",
+		Body:  template.HTML(body),
+	}
+
 	var buffer bytes.Buffer
 
-	// Write html to buffer
-	buffer.WriteString(header)
-	buffer.Write(body)
-	buffer.WriteString(footer)
+	if err := t.Execute(&buffer, c); err != nil {
+		return nil, err
+	}
 
-	return buffer.Bytes()
+	return buffer.Bytes(), nil
 
 }
 

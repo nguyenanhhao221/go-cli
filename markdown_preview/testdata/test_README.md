@@ -13,4 +13,3 @@
 ```
 go get github.com/foo/bar 
 ```
-
