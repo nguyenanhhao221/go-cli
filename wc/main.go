@@ -24,15 +24,30 @@ func main() {
 
 	// Parsing the flag provided by user
 	flag.Parse()
-
-	fmt.Println(count(os.Stdin, &opts))
-}
-
-func count(r io.Reader, opts *wcOpts) int {
+	files := flag.Args()
 
 	if opts.countBytes && opts.lines {
 		log.Fatal("-l and -b cannot be use together")
 	}
+
+	var totalCount int = 0
+
+	if len(files) > 0 {
+		for _, file := range files {
+			f, err := os.Open(file)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "err:%v\n", err)
+			}
+			defer f.Close()
+			totalCount += count(f, &opts)
+		}
+		fmt.Println(totalCount)
+	} else {
+		fmt.Println(count(os.Stdin, &opts))
+	}
+}
+
+func count(r io.Reader, opts *wcOpts) int {
 	// Create a new scanner to prepare to read from io.Reader
 	scanner := bufio.NewScanner(r)
 
