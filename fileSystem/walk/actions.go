@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -34,6 +35,7 @@ func filterOut(path, ext string, minSize int64, info os.FileInfo) bool {
 	return false
 }
 
-func delFile(path string) error {
+func delFile(path string, delLogger *log.Logger) error {
+	delLogger.Println(path)
 	return os.Remove(path)
 }
