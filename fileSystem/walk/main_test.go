@@ -53,14 +53,19 @@ func TestRunDelExtension(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			var buffer, logBuffer bytes.Buffer
+
 			files := map[string]int{
 				tc.cfg.ext:     tc.nDelete,
 				tc.extNoDelete: tc.nNodelete,
 			}
 
+			// Remember because this test is mainly test the run function, we cannot pass the -del log file name like in the cli
+			// There for we use this logBuffer to let our test run write to this logBuffer, then we will validate the output against it
+			tc.cfg.wLog = &logBuffer
+
 			rootTmpDir := createTempDirWithMockFiles(t, files)
 
-			var buffer bytes.Buffer
 			err := run(rootTmpDir, &buffer, tc.cfg)
 			if err != nil {
 				t.Fatal(err)
@@ -78,6 +83,12 @@ func TestRunDelExtension(t *testing.T) {
 
 			if len(fileLeft) != tc.nNodelete {
 				t.Errorf("Expected %d, got %d instead \n", tc.nNodelete, len(fileLeft))
+			}
+
+			expLogLines := tc.nDelete + 1
+			lines := len(bytes.Split(logBuffer.Bytes(), []byte("\n")))
+			if lines != expLogLines {
+				t.Errorf("Expected %d log lines, got %d", expLogLines, lines)
 			}
 		})
 
