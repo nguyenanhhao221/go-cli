@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"fmt"
+	"os"
 	"testing"
 )
 
@@ -33,4 +35,71 @@ func TestRun(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRunDelExtension(t *testing.T) {
+	testCases := []struct {
+		name        string
+		extNoDelete string
+		expected    string
+		cfg         config
+		nDelete     int
+		nNodelete   int
+	}{
+		{name: "DeleteExtensionNoMatch", cfg: config{ext: ".log", del: true}, extNoDelete: ".gz", nDelete: 0, nNodelete: 10, expected: ""},
+		{name: "DeleteExtensionMatch", cfg: config{ext: ".log", del: true}, extNoDelete: "", nDelete: 10, nNodelete: 0, expected: ""},
+		{name: "DeleteExtensionMix", cfg: config{ext: ".log", del: true}, extNoDelete: ".gz", nDelete: 5, nNodelete: 5, expected: ""},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			files := map[string]int{
+				tc.cfg.ext:     tc.nDelete,
+				tc.extNoDelete: tc.nNodelete,
+			}
+
+			rootTmpDir := createTempDirWithMockFiles(t, files)
+
+			var buffer bytes.Buffer
+			err := run(rootTmpDir, &buffer, tc.cfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			res := buffer.String()
+			if tc.expected != res {
+				t.Errorf("Expected %q, got %q instead \n", tc.expected, res)
+			}
+
+			fileLeft, err := os.ReadDir(rootTmpDir)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if len(fileLeft) != tc.nNodelete {
+				t.Errorf("Expected %d, got %d instead \n", tc.nNodelete, len(fileLeft))
+			}
+		})
+
+	}
+
+}
+
+func createTempDirWithMockFiles(t *testing.T, files map[string]int) string {
+	t.Helper()
+	tempDir := t.TempDir()
+	for k, v := range files {
+		for i := 0; i < v; i++ {
+			fname := fmt.Sprintf("file*%s", k)
+			f, err := os.CreateTemp(tempDir, fname)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer f.Close()
+			if _, err := f.Write([]byte("dummy")); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	return tempDir
 }
