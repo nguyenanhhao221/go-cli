@@ -15,6 +15,8 @@ type config struct {
 	size int64
 	// list files
 	list bool
+	// delete files
+	del bool
 }
 
 func main() {
@@ -23,12 +25,14 @@ func main() {
 	//Filter options
 	ext := flag.String("ext", "", "File extension to filter out")
 	size := flag.Int64("size", 0, "Minimum file size")
+	del := flag.Bool("del", false, "Delete files")
 	flag.Parse()
 
 	c := config{
 		ext:  *ext,
 		list: *list,
 		size: *size,
+		del:  *del,
 	}
 
 	if err := run(*root, os.Stdout, c); err != nil {
@@ -50,6 +54,12 @@ func run(root string, out io.Writer, cfg config) error {
 		if cfg.list {
 			return listFile(path, out)
 		}
+
+		// Delete file
+		if cfg.del {
+			return delFile(path)
+		}
+
 		return listFile(path, out)
 	})
 

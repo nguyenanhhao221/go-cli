@@ -33,3 +33,7 @@ func filterOut(path, ext string, minSize int64, info os.FileInfo) bool {
 	}
 	return false
 }
+
+func delFile(path string) error {
+	return os.Remove(path)
+}
