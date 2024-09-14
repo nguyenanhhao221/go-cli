@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -92,6 +94,65 @@ func TestRunDelExtension(t *testing.T) {
 			}
 		})
 
+	}
+
+}
+
+func TestRunWithArchive(t *testing.T) {
+	testCases := []struct {
+		name         string
+		cfg          config
+		extNoArchive string
+		nArchive     int
+		nNoArhive    int
+	}{
+		{name: "ArchiveExtensionNoMatch", cfg: config{ext: ".log"}, extNoArchive: ".gz", nArchive: 0, nNoArhive: 10},
+		{name: "ArchiveExtensionMatch", cfg: config{ext: ".log"}, extNoArchive: "", nArchive: 10, nNoArhive: 0},
+		{name: "ArchiveExtensionMix", cfg: config{ext: ".log"}, extNoArchive: ".gz", nArchive: 5, nNoArhive: 5},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var buffer bytes.Buffer
+
+			files := map[string]int{
+				tc.cfg.ext:      tc.nArchive,
+				tc.extNoArchive: tc.nNoArhive,
+			}
+
+			rootTmpDir := createTempDirWithMockFiles(t, files)
+			tmpDirArchive := createTempDirWithMockFiles(t, nil)
+
+			//  make run config with archive opt on
+			tc.cfg.archive = tmpDirArchive
+
+			if err := run(rootTmpDir, &buffer, tc.cfg); err != nil {
+				t.Fatal(err)
+			}
+
+			// Validate the output
+			// filepath.Glob take in a pattern of file name and output all these file in a slice
+			// So base on the pattern of extension that we want to archive, we go find these file in the root. Then compare it with the result in the archiveDir
+			pattern := filepath.Join(rootTmpDir, fmt.Sprintf("*%s", tc.cfg.ext))
+			expFiles, err := filepath.Glob(pattern)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			expOut := strings.Join(expFiles, "\n")
+			res := strings.TrimSpace(buffer.String())
+			if expOut != res {
+				t.Errorf("Expected %q, got %q instead", expOut, res)
+			}
+
+			// Validate the number of files archived
+			filesArchived, err := os.ReadDir(tmpDirArchive)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(filesArchived) != tc.nArchive {
+				t.Errorf("Expected %d files to be archived, got %d instead", tc.nArchive, len(filesArchived))
+			}
+		})
 	}
 
 }
