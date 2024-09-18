@@ -38,7 +38,7 @@ func csv2float(r io.Reader, column int) ([]float64, error) {
 			continue
 		}
 
-		if len(row) < column {
+		if len(row) <= column {
 			// File does not have that many column
 			return nil, fmt.Errorf("%w: File has only %d columns", ErrInvalidColumn, len(row))
 		}
