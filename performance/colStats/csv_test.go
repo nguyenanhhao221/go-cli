@@ -1,7 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"errors"
+	"io"
+	"slices"
 	"testing"
+	"testing/iotest"
 )
 
 func TestOperations(t *testing.T) {
@@ -30,5 +35,46 @@ func TestOperations(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestCsv2Float(t *testing.T) {
+	csvData := `IP Address,Timestamp,Response Time,Bytes
+192.168.0.199,1520698621,236,3475
+192.168.0.88,1520698776,220,3200
+192.168.0.199,1520699033,226,3200
+192.168.0.100,1520699142,218,3475
+192.168.0.199,1520699379,238,3822
+`
+	testCases := []struct {
+		name           string
+		col            int
+		expectedResult []float64
+		expErr         error
+		r              io.Reader
+	}{
+		{name: "Column2", col: 2, expectedResult: []float64{1520698621, 1520698776, 1520699033, 1520699142, 1520699379}, expErr: nil, r: bytes.NewBufferString(csvData)},
+		{name: "Column3", col: 3, expectedResult: []float64{236, 220, 226, 218, 238}, expErr: nil, r: bytes.NewBufferString(csvData)},
+		{name: "FailRead", col: 1, expErr: iotest.ErrTimeout, r: iotest.TimeoutReader(bytes.NewReader([]byte{0}))},
+		{name: "Fail Invalid Column", col: 5, expErr: ErrInvalidColumn, r: bytes.NewBufferString(csvData)},
+		{name: "Fail Not Number", col: 1, expErr: ErrNotNumber, r: bytes.NewBufferString(csvData)},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := csv2float(tc.r, tc.col)
+			if tc.expErr != nil {
+				if err == nil {
+					t.Errorf("Expect error, got nil")
+				}
+				if !errors.Is(err, tc.expErr) {
+					t.Errorf("Expected error %q got %q", tc.expErr, err)
+				}
+			}
+			if !slices.Equal(result, tc.expectedResult) {
+				t.Errorf("Expected %#v, got %#v", tc.expectedResult, result)
+			}
+		})
+
 	}
 }
