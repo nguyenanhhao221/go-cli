@@ -1,0 +1,7 @@
+goos: darwin
+goarch: arm64
+pkg: performance/colStats
+cpu: Apple M1
+BenchmarkRun-8   	      10	 241012246 ns/op	214886745 B/op	 2527035 allocs/op
+PASS
+ok  	performance/colStats	3.707s
