@@ -27,3 +27,4 @@ wc/wc
 markdown_preview/mdp
 .DS_Store
 performance/colStats/colStats
+performance/colStats/testdata/benchmark
