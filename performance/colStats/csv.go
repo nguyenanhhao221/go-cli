@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"slices"
 	"strconv"
 )
 
@@ -18,6 +19,14 @@ func sum(data []float64) float64 {
 
 func avg(data []float64) float64 {
 	return sum(data) / float64(len(data))
+}
+
+func min(data []float64) float64 {
+	return slices.Min(data)
+}
+
+func max(data []float64) float64 {
+	return slices.Max(data)
 }
 
 // statsFunc defines a generic statistical function

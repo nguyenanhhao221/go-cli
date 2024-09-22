@@ -19,8 +19,12 @@ func TestRun(t *testing.T) {
 		expErr    error
 	}{
 		{name: "RunAvg1File", op: "avg", col: 3, filenames: []string{"testdata/example.csv"}, expected: "227.6\n", expErr: nil},
+		{name: "RunMin1File", op: "min", col: 3, filenames: []string{"testdata/example.csv"}, expected: "218\n", expErr: nil},
+		{name: "RunMax1File", op: "max", col: 3, filenames: []string{"testdata/example.csv"}, expected: "238\n", expErr: nil},
 		{name: "RunAvgMultiFiles", op: "avg", col: 3, filenames: []string{"testdata/example.csv", "testdata/example2.csv"}, expected: "233.84\n", expErr: nil},
 		{name: "RunSumMultiFiles", op: "sum", col: 3, filenames: []string{"testdata/example.csv", "testdata/example2.csv"}, expected: "5846\n", expErr: nil},
+		{name: "RunMinMultiFiles", op: "min", col: 3, filenames: []string{"testdata/example.csv", "testdata/example2.csv"}, expected: "218\n", expErr: nil},
+		{name: "RunMaxMultiFiles", op: "max", col: 3, filenames: []string{"testdata/example.csv", "testdata/example2.csv"}, expected: "238\n", expErr: nil},
 		{name: "RunFailReadFile", op: "avg", col: 3, filenames: []string{"testdata/invalid.csv"}, expErr: os.ErrNotExist},
 		{name: "RunFailColumn", op: "avg", col: 0, filenames: []string{"testdata/example.csv"}, expErr: ErrInvalidColumn},
 		{name: "RunFailNoFiles", op: "avg", col: 0, filenames: []string{}, expErr: ErrNoFiles},
