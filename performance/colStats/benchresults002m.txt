@@ -1,0 +1,16 @@
+goos: darwin
+goarch: arm64
+pkg: performance/colStats
+cpu: Apple M1
+BenchmarkRun-8   	      16	  70343950 ns/op	214992818 B/op	 2529304 allocs/op
+BenchmarkRun-8   	      16	  69641500 ns/op	214989445 B/op	 2529269 allocs/op
+BenchmarkRun-8   	      15	  70390700 ns/op	214991417 B/op	 2529290 allocs/op
+BenchmarkRun-8   	      15	  70619681 ns/op	214993760 B/op	 2529314 allocs/op
+BenchmarkRun-8   	      15	  69764472 ns/op	214989754 B/op	 2529272 allocs/op
+BenchmarkRun-8   	      15	  71270333 ns/op	214994344 B/op	 2529320 allocs/op
+BenchmarkRun-8   	      15	  71258142 ns/op	214994836 B/op	 2529325 allocs/op
+BenchmarkRun-8   	      16	  69077919 ns/op	214991417 B/op	 2529290 allocs/op
+BenchmarkRun-8   	      16	  70700846 ns/op	214993189 B/op	 2529308 allocs/op
+BenchmarkRun-8   	      16	  69982693 ns/op	214990247 B/op	 2529277 allocs/op
+PASS
+ok  	performance/colStats	16.517s

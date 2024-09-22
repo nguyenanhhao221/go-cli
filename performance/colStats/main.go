@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"sync"
 )
 
@@ -47,41 +48,44 @@ func run(filenames []string, op string, column int, out io.Writer) error {
 
 	errCh := make(chan error)
 	resCh := make(chan []float64)
+	fileCh := make(chan string)
 	doneCh := make(chan struct{})
 
-	for _, fname := range filenames {
+	// loop through all files and sending each of them to the fileCh
+	// So they can be read and process when a worker is available
+	go func() {
+		defer close(fileCh)
+		for _, fname := range filenames {
+			fileCh <- fname
+		}
+	}()
+
+	for i := 0; i < runtime.NumCPU(); i++ {
 		wg.Add(1)
-		// for each file, we use an anonymous go routine,
-		// We pass the fname again to this function to avoid common bug for Go before 1.22 due to the way for loop work and close.
-		// this is not necessary for go >1.22
-		// Before Go 1.22, if we don't pass fname as param to this function, each time Go went through the loop, it create and reuse the same variable
-		// In this case, when we go through filenames, it create fname variable, then next time, it reuse that same variable
-		// Because of this, if use go routine like we did, we will always get the last item in the filenames. Because the loop will finish loop, the fname variable will keep being override util the loop is finish
-		// By the time the go routine actually run, each of them will go through the same varibale "fname".
-		// The behavior is fix in Go 1.22 where each time we go through the loop, a new variable is created to whole the value.
-		// https://go.dev/doc/faq#closures_and_goroutines
-		// https://go.dev/blog/loopvar-preview
-		go func(fname string) {
+		go func() {
 			defer wg.Done()
-			f, err := os.Open(fname)
-			if err != nil {
-				errCh <- fmt.Errorf("Cannot open file: %w", err)
-				return
+			for fname := range fileCh {
+				f, err := os.Open(fname)
+				if err != nil {
+					errCh <- fmt.Errorf("Cannot open file: %w", err)
+					return
+				}
+
+				// Parse the CSV into a slice of float64 numbers
+				data, err := csv2float(f, column)
+				if err != nil {
+					errCh <- err
+				}
+
+				if err := f.Close(); err != nil {
+					errCh <- err
+				}
+
+				resCh <- data
 			}
 
-			// Parse the CSV into a slice of float64 numbers
-			data, err := csv2float(f, column)
-			if err != nil {
-				errCh <- err
-			}
+		}()
 
-			if err := f.Close(); err != nil {
-				errCh <- err
-			}
-
-			resCh <- data
-
-		}(fname)
 	}
 
 	go func() {
