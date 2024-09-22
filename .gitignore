@@ -28,3 +28,4 @@ markdown_preview/mdp
 .DS_Store
 performance/colStats/colStats
 performance/colStats/testdata/benchmark
+performance/colStats/cpu02.pprof
