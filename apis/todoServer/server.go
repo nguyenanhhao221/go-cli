@@ -8,7 +8,7 @@ import (
 func newMux(todoFile string) http.Handler {
 	m := http.NewServeMux()
 
-	m.HandleFunc("/", rootHandler)
+	m.HandleFunc("GET /", rootHandler)
 	return m
 }
 
