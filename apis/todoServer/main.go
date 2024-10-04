@@ -13,7 +13,7 @@ func main() {
 	// Parse flag
 	host := flag.String("h", "localhost", "Server host")
 	port := flag.Int("p", 8080, "Server port")
-	todoFile := flag.String("f", "todoServer.json", "todo JSON file")
+	todoFile := flag.String("f", ".todo.json", "todo JSON file")
 	flag.Parse()
 
 	s := &http.Server{
