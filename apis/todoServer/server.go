@@ -5,15 +5,19 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"sync"
 	"todo"
 )
 
 func newMux(todoFile string) http.Handler {
 	m := http.NewServeMux()
+	mu := &sync.Mutex{}
 	list := &todo.List{}
 
 	m.HandleFunc("GET /", rootHandler)
 	m.HandleFunc("GET /todo", func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
 		getTodoRouter(w, r, list, todoFile)
 	})
 	m.HandleFunc("GET /todo/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -26,11 +30,16 @@ func newMux(todoFile string) http.Handler {
 			replyError(w, r, http.StatusBadRequest, err.Error())
 			return
 		}
+
+		mu.Lock()
+		defer mu.Unlock()
 		getSingleTodoRouter(w, r, list, id)
 	})
 
 	//POST
 	m.HandleFunc("POST /todo", func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
 		addTodoRouter(w, r, list, todoFile)
 	})
 
@@ -45,6 +54,8 @@ func newMux(todoFile string) http.Handler {
 			replyError(w, r, http.StatusBadRequest, err.Error())
 			return
 		}
+		mu.Lock()
+		defer mu.Unlock()
 		deleteTodoHandler(w, r, list, id, todoFile)
 	})
 	return m
