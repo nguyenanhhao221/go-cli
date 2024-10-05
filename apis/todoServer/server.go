@@ -43,6 +43,29 @@ func newMux(todoFile string) http.Handler {
 		addTodoRouter(w, r, list, todoFile)
 	})
 
+	// UPDATE COMPLETE
+	m.HandleFunc("PATCH /todo/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id, err := validateID(r.PathValue("id"), list)
+		if err != nil {
+			if errors.Is(err, ErrNotFound) {
+				replyError(w, r, http.StatusNotFound, err.Error())
+				return
+			}
+			replyError(w, r, http.StatusBadRequest, err.Error())
+			return
+		}
+		// Check if query complete
+		q := r.URL.Query()
+		_, ok := q["complete"]
+		if !ok {
+			replyError(w, r, http.StatusBadRequest, "Missing require query complete.")
+		}
+
+		mu.Lock()
+		defer mu.Unlock()
+		pacthHandler(w, r, list, id, todoFile)
+	})
+
 	// DELETE
 	m.HandleFunc("DELETE /todo/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id, err := validateID(r.PathValue("id"), list)

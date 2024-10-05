@@ -142,6 +142,75 @@ func TestDeleteTodo(t *testing.T) {
 	})
 }
 
+func TestCompleteTodo(t *testing.T) {
+	serverUrl, cleanup := setupTestServer(t)
+	defer cleanup()
+	t.Run("Complete", func(t *testing.T) {
+		endpoint := fmt.Sprintf("%s/todo/1?complete", serverUrl)
+		req, err := http.NewRequest(http.MethodPatch, endpoint, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		r, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if r.StatusCode != http.StatusNoContent {
+			t.Errorf("Expect status %d, got %d", http.StatusNoContent, r.StatusCode)
+		}
+	})
+	t.Run("Check Complete", func(t *testing.T) {
+		r, err := http.Get(serverUrl + "/todo/1")
+		if err != nil {
+			t.Error(err)
+		}
+		if r.StatusCode != http.StatusOK {
+			t.Errorf("Expect status %d, got %d", http.StatusOK, r.StatusCode)
+		}
+
+		var resp todoResponse
+		if err := json.NewDecoder(r.Body).Decode(&resp); err != nil {
+			t.Fatalf("Error when decoding response %s", err)
+		}
+		r.Body.Close()
+
+		if len(resp.Results.Items) != 1 {
+			t.Errorf("Expect 2 items, got %d items", len(resp.Results.Items))
+		}
+		if !resp.Results.Items[0].Done {
+			t.Errorf("Expect task to be Complete got %v", resp.Results.Items[0])
+		}
+	})
+	t.Run("Complete Missing Query", func(t *testing.T) {
+		endpoint := fmt.Sprintf("%s/todo/1", serverUrl)
+		req, err := http.NewRequest(http.MethodPatch, endpoint, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		r, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Error(err)
+		}
+		defer r.Body.Close()
+
+		if r.StatusCode != http.StatusBadRequest {
+			t.Errorf("Expect status %d, got %d", http.StatusBadRequest, r.StatusCode)
+		}
+
+		expectMessage := "Missing require query complete.\n"
+		res, err := io.ReadAll(r.Body)
+		if err != nil {
+			t.Fatalf("Error reading response %v", err)
+		}
+		if string(res) != expectMessage {
+			t.Errorf("Expect %q, got %q", expectMessage, string(res))
+		}
+	})
+}
+
 func setupTestServer(t *testing.T) (string, func()) {
 	t.Helper()
 

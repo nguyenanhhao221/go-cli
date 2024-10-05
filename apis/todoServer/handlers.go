@@ -79,6 +79,20 @@ func deleteTodoHandler(w http.ResponseWriter, r *http.Request, list *todo.List, 
 	replyPlainText(w, r, http.StatusNoContent, "")
 }
 
+func pacthHandler(w http.ResponseWriter, r *http.Request, list *todo.List, id int, todoFile string) {
+	if err := list.Complete(id); err != nil {
+		replyError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if err := list.Save(todoFile); err != nil {
+		replyError(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	replyPlainText(w, r, http.StatusNoContent, "")
+}
+
 func validateID(idString string, list *todo.List) (int, error) {
 	id, err := strconv.Atoi(idString)
 	if err != nil {
