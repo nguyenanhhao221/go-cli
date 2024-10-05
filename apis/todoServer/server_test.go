@@ -13,7 +13,7 @@ import (
 	"todo"
 )
 
-func TestServerGet(t *testing.T) {
+func TestGetTodo(t *testing.T) {
 	testCases := []struct {
 		name       string
 		route      string
