@@ -21,7 +21,7 @@ func TestGetTodo(t *testing.T) {
 		expItems   int
 		expReponse string
 	}{
-		{name: "GetRoute", route: "/", expStatus: http.StatusOK, expReponse: "hello there you hit the api"},
+		{name: "GetRoot", route: "/", expStatus: http.StatusOK, expReponse: "hello there you hit the api"},
 		{name: "GetAll", route: "/todo", expStatus: http.StatusOK, expItems: 2, expReponse: "Task number 1."},
 		{name: "GetSingle", route: "/todo/2", expStatus: http.StatusOK, expItems: 1, expReponse: "Task number 2."},
 		{name: "NotFoundRoute", route: "/invalid/todo", expStatus: http.StatusNotFound, expReponse: "404 page not found\n"},
