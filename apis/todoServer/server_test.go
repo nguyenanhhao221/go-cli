@@ -99,6 +99,49 @@ func TestAddTodo(t *testing.T) {
 	}
 }
 
+func TestDeleteTodo(t *testing.T) {
+	serverUrl, cleanup := setupTestServer(t)
+	defer cleanup()
+	endpoint := fmt.Sprintf("%s/todo/1", serverUrl)
+	req, err := http.NewRequest(http.MethodDelete, endpoint, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if r.StatusCode != http.StatusNoContent {
+		t.Errorf("Expect status %d, got %d", http.StatusNoContent, r.StatusCode)
+	}
+	t.Run("Check delete", func(t *testing.T) {
+		r, err := http.Get(serverUrl + "/todo")
+		if err != nil {
+			t.Error(err)
+		}
+		if r.StatusCode != http.StatusOK {
+			t.Errorf("Expect status %d, got %d", http.StatusOK, r.StatusCode)
+		}
+
+		var resp todoResponse
+		if err := json.NewDecoder(r.Body).Decode(&resp); err != nil {
+			t.Fatalf("Error when decoding response %s", err)
+		}
+		r.Body.Close()
+
+		if len(resp.Results.Items) != 1 {
+			t.Errorf("Expect 1 items, got %d items", len(resp.Results.Items))
+		}
+		expTask := "Task number 2."
+		if resp.Results.Items[0].Task != expTask {
+			t.Errorf("Expect task %q, got %q\n", expTask, resp.Results.Items[0].Task)
+		}
+
+	})
+}
+
 func setupTestServer(t *testing.T) (string, func()) {
 	t.Helper()
 

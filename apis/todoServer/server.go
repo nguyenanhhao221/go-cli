@@ -29,8 +29,23 @@ func newMux(todoFile string) http.Handler {
 		getSingleTodoRouter(w, r, list, id)
 	})
 
+	//POST
 	m.HandleFunc("POST /todo", func(w http.ResponseWriter, r *http.Request) {
 		addTodoRouter(w, r, list, todoFile)
+	})
+
+	// DELETE
+	m.HandleFunc("DELETE /todo/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id, err := validateID(r.PathValue("id"), list)
+		if err != nil {
+			if errors.Is(err, ErrNotFound) {
+				replyError(w, r, http.StatusNotFound, err.Error())
+				return
+			}
+			replyError(w, r, http.StatusBadRequest, err.Error())
+			return
+		}
+		deleteTodoHandler(w, r, list, id, todoFile)
 	})
 	return m
 }
