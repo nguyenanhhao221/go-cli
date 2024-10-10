@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -12,6 +13,12 @@ import (
 	"testing"
 	"todo"
 )
+
+// Remove test output log to avoid messing with test output
+func TestMain(m *testing.M) {
+	log.SetOutput(io.Discard)
+	os.Exit(m.Run())
+}
 
 func TestGetTodo(t *testing.T) {
 	testCases := []struct {
