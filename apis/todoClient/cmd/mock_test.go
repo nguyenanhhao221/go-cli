@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 )
 
-// testResp simulates test reponses from the API
+// testResp simulates test responses from the API
 var testResp = map[string]struct {
 	Status int
 	Body   string
