@@ -7,18 +7,25 @@ import (
 )
 
 type todoResponse struct {
-	Results todo.List `json:"results"`
+	Results []todo.Item `json:"results"`
+}
+
+type item struct {
+	CompletedAt time.Time
+	CreatedAt   time.Time
+	Task        string
+	Done        bool
 }
 
 func (r *todoResponse) MarshalJSON() ([]byte, error) {
 	resp := struct {
-		Results      todo.List `json:"results"`
-		Date         int64     `json:"date"`
-		TotalResults int       `json:"totalResults"`
+		Results      []todo.Item `json:"results"`
+		Date         int64       `json:"date"`
+		TotalResults int         `json:"totalResults"`
 	}{
 		Results:      r.Results,
 		Date:         time.Now().Unix(),
-		TotalResults: len(r.Results.Items),
+		TotalResults: len(r.Results),
 	}
 
 	return json.Marshal(resp)

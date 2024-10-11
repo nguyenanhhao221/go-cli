@@ -45,9 +45,9 @@ func TestGetTodo(t *testing.T) {
 			var (
 				body []byte
 				resp struct {
-					Results      todo.List `json:"results"`
-					Date         int64     `json:"date"`
-					TotalResults int       `json:"totalResults"`
+					Results      []todo.Item `json:"results"`
+					Date         int64       `json:"date"`
+					TotalResults int         `json:"totalResults"`
 				}
 			)
 			if r.StatusCode != tc.expStatus {
@@ -72,8 +72,8 @@ func TestGetTodo(t *testing.T) {
 					t.Errorf("Expect totalResults: %d, got %d\n", tc.expItems, resp.TotalResults)
 				}
 
-				if resp.Results.Items[0].Task != tc.expReponse {
-					t.Errorf("Expect task name: %q, got %q\n", tc.expReponse, resp.Results.Items[0].Task)
+				if resp.Results[0].Task != tc.expReponse {
+					t.Errorf("Expect task name: %q, got %q\n", tc.expReponse, resp.Results[0].Task)
 				}
 			}
 
@@ -138,12 +138,12 @@ func TestDeleteTodo(t *testing.T) {
 		}
 		r.Body.Close()
 
-		if len(resp.Results.Items) != 1 {
-			t.Errorf("Expect 1 items, got %d items", len(resp.Results.Items))
+		if len(resp.Results) != 1 {
+			t.Errorf("Expect 1 items, got %d items", len(resp.Results))
 		}
 		expTask := "Task number 2."
-		if resp.Results.Items[0].Task != expTask {
-			t.Errorf("Expect task %q, got %q\n", expTask, resp.Results.Items[0].Task)
+		if resp.Results[0].Task != expTask {
+			t.Errorf("Expect task %q, got %q\n", expTask, resp.Results[0].Task)
 		}
 
 	})
@@ -183,11 +183,11 @@ func TestCompleteTodo(t *testing.T) {
 		}
 		r.Body.Close()
 
-		if len(resp.Results.Items) != 1 {
-			t.Errorf("Expect 2 items, got %d items", len(resp.Results.Items))
+		if len(resp.Results) != 1 {
+			t.Errorf("Expect 2 items, got %d items", len(resp.Results))
 		}
-		if !resp.Results.Items[0].Done {
-			t.Errorf("Expect task to be Complete got %v", resp.Results.Items[0])
+		if !resp.Results[0].Done {
+			t.Errorf("Expect task to be Complete got %v", resp.Results[0])
 		}
 	})
 	t.Run("Complete Missing Query", func(t *testing.T) {

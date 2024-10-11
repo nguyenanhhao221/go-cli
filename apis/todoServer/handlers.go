@@ -29,18 +29,14 @@ func getTodoRouter(w http.ResponseWriter, r *http.Request, list *todo.List, todo
 	}
 
 	resp := &todoResponse{
-		Results: *list,
+		Results: list.Items,
 	}
 	replyJSONContent(w, r, http.StatusOK, resp)
 }
 
 func getSingleTodoRouter(w http.ResponseWriter, r *http.Request, list *todo.List, id int) {
 	resp := &todoResponse{
-		Results: todo.List{
-			Items:        list.Items[id-1 : id],
-			HideComplete: list.HideComplete,
-			VerboseMode:  list.VerboseMode,
-		},
+		Results: list.Items[id-1 : id],
 	}
 	replyJSONContent(w, r, http.StatusOK, resp)
 }
