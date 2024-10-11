@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type item struct {
+type Item struct {
 	CompletedAt time.Time
 	CreatedAt   time.Time
 	Task        string
@@ -17,14 +17,14 @@ type item struct {
 
 // List represents a list of ToDo items and Verbose mode
 type List struct {
-	Items        []item
+	Items        []Item
 	VerboseMode  bool
 	HideComplete bool
 }
 
 // Add creates a ToDo item and append it to the List
 func (l *List) Add(task string) {
-	t := item{
+	t := Item{
 		Task:        task,
 		Done:        false,
 		CreatedAt:   time.Now(),
