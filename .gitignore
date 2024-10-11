@@ -29,3 +29,5 @@ markdown_preview/mdp
 performance/colStats/colStats
 performance/colStats/testdata/benchmark
 performance/colStats/cpu02.pprof
+apis/todoClient/todoClient
+apis/todoServer/todoServer
