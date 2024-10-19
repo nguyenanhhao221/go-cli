@@ -77,7 +77,6 @@ func getOne(endpoint string) (item, error) {
 	items, err := getItems(endpoint)
 	if err != nil {
 		return item{}, err
-
 	}
 	if len(items) != 1 {
 		return item{}, fmt.Errorf("%w: Invalid results", ErrInvalid)
