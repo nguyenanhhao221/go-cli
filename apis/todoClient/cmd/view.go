@@ -54,8 +54,7 @@ func viewAction(out io.Writer, apiRoot string, arg string) error {
 		return fmt.Errorf("%w: Item id must be a number", ErrNotNumber)
 	}
 
-	endpoint := fmt.Sprintf("%s/todo/%d", apiRoot, id)
-	item, err := getOne(endpoint)
+	item, err := getOne(apiRoot, id)
 	if err != nil {
 		return err
 	}

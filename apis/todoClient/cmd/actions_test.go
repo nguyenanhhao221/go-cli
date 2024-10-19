@@ -183,8 +183,7 @@ func TestAddAction(t *testing.T) {
 
 	var out bytes.Buffer
 
-	endpoint := url + "/todo"
-	err := addAction(&out, endpoint, args)
+	err := addAction(&out, url, args)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -39,8 +39,7 @@ var addCmd = &cobra.Command{
 	Args:         cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		apiRoot := viper.GetString("api-root")
-		endpoint := apiRoot + "/todo"
-		return addAction(os.Stdout, endpoint, args)
+		return addAction(os.Stdout, apiRoot, args)
 	},
 }
 

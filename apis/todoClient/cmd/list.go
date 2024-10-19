@@ -37,8 +37,7 @@ var listCmd = &cobra.Command{
 	Short: "List Todos",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		apiRoot := viper.GetString("api-root")
-		endpoint := apiRoot + "/todo"
-		return listAction(os.Stdout, endpoint)
+		return listAction(os.Stdout, apiRoot)
 	},
 }
 

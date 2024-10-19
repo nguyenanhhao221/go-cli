@@ -74,7 +74,13 @@ func getItems(endpoint string) ([]item, error) {
 	return resp.Results, nil
 }
 
-func getOne(endpoint string) (item, error) {
+func getAll(apiRoot string) ([]item, error) {
+	u := fmt.Sprintf("%s/todo", apiRoot)
+	return getItems(u)
+}
+
+func getOne(apiRoot string, id int) (item, error) {
+	endpoint := fmt.Sprintf("%s/todo/%d", apiRoot, id)
 	items, err := getItems(endpoint)
 	if err != nil {
 		return item{}, err
@@ -85,8 +91,9 @@ func getOne(endpoint string) (item, error) {
 	return items[0], nil
 }
 
-func addItem(endpoint, task string) error {
+func addItem(apiRoot, task string) error {
 	// Make a POST request to the server
+	url := fmt.Sprintf("%s/todo", apiRoot)
 	item := struct {
 		Task string `json:"task"`
 	}{
@@ -98,7 +105,7 @@ func addItem(endpoint, task string) error {
 	if err := json.NewEncoder(&body).Encode(&item); err != nil {
 		return err
 	}
-	return sendRequest(endpoint, http.MethodPost, "application/json", http.StatusCreated, &body)
+	return sendRequest(url, http.MethodPost, "application/json", http.StatusCreated, &body)
 }
 
 func completeItem(apiRoot string, id int) error {
