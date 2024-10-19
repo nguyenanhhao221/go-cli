@@ -25,44 +25,53 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-// listCmd represents the list command
-var listCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List Todos",
+// viewCmd represents the view command
+var viewCmd = &cobra.Command{
+	Use:          "view <id>",
+	Short:        "View details about a single item",
+	SilenceUsage: true,
+	Args:         cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		apiRoot := viper.GetString("api-root")
-		endpoint := apiRoot + "/todo"
-		return listAction(os.Stdout, endpoint)
+		return viewAction(os.Stdout, apiRoot, args[0])
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(viewCmd)
 }
 
-func listAction(out io.Writer, url string) error {
-	items, err := getItems(url)
+func viewAction(out io.Writer, apiRoot string, arg string) error {
+	id, err := strconv.Atoi(arg)
+	if err != nil {
+		return fmt.Errorf("%w: Item id must be a number", ErrNotNumber)
+	}
+
+	endpoint := fmt.Sprintf("%s/todo/%d", apiRoot, id)
+	item, err := getOne(endpoint)
 	if err != nil {
 		return err
 	}
-	return printAll(out, items)
+
+	return printOne(out, item)
 }
 
-func printAll(out io.Writer, items []item) error {
-	w := tabwriter.NewWriter(out, 3, 2, 0, ' ', 0)
-	for k, v := range items {
-		done := "-"
-		if v.Done {
-			done = "X"
-		}
-		fmt.Fprintf(w, "%s\t%d\t%s\t\n", done, k+1, v.Task)
+func printOne(out io.Writer, item item) error {
+	w := tabwriter.NewWriter(out, 14, 2, 0, ' ', 0)
+	fmt.Fprintf(w, "Task:\t%s\n", item.Task)
+	fmt.Fprintf(w, "Created at:\t%s\n", item.CreatedAt.Format(timeFormat))
+	if item.Done {
+		fmt.Fprintf(w, "Completed: \t%s\n", "Yes")
+		fmt.Fprintf(w, "Completed At: \t%s\n", item.CompletedAt.Format(timeFormat))
 	}
 
+	fmt.Fprintf(w, "Completed: \t%s\n", "No")
 	return w.Flush()
 }

@@ -17,6 +17,8 @@ var (
 	ErrNotNumber       = errors.New("Not a number")
 )
 
+const timeFormat = "Jan/02 @15:04"
+
 type item struct {
 	Task        string
 	Done        bool
@@ -38,9 +40,9 @@ func newClient() *http.Client {
 	return client
 }
 
-func getItems(url string) ([]item, error) {
+func getItems(endpoint string) ([]item, error) {
 	client := newClient()
-	res, err := client.Get(url + "/todo")
+	res, err := client.Get(endpoint)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrConnection, err)
 	}
@@ -69,4 +71,16 @@ func getItems(url string) ([]item, error) {
 		return nil, fmt.Errorf("%w: No results found", ErrNotFound)
 	}
 	return resp.Results, nil
+}
+
+func getOne(endpoint string) (item, error) {
+	items, err := getItems(endpoint)
+	if err != nil {
+		return item{}, err
+
+	}
+	if len(items) != 1 {
+		return item{}, fmt.Errorf("%w: Invalid results", ErrInvalid)
+	}
+	return items[0], nil
 }
