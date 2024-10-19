@@ -36,7 +36,7 @@ func newMux(todoFile string) http.Handler {
 		getSingleTodoRouter(w, r, list, id)
 	})
 
-	//POST
+	// POST
 	m.HandleFunc("POST /todo", func(w http.ResponseWriter, r *http.Request) {
 		mu.Lock()
 		defer mu.Unlock()
@@ -81,7 +81,9 @@ func newMux(todoFile string) http.Handler {
 		defer mu.Unlock()
 		deleteTodoHandler(w, r, list, id, todoFile)
 	})
-	return m
+
+	// Dirty way to add Logging middleware because it quite hard to see
+	return loggingMiddleware(m)
 }
 
 func replyPlainText(w http.ResponseWriter, r *http.Request, status int, content string) {
