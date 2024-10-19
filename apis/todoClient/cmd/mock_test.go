@@ -65,6 +65,11 @@ var testResp = map[string]struct {
 		Status: http.StatusNotFound,
 		Body:   "404 - not found",
 	},
+
+	"created": {
+		Status: http.StatusCreated,
+		Body:   "",
+	},
 }
 
 // mockServer creates a mock server to simulate the todo API

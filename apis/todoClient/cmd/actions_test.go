@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"testing"
 )
@@ -140,5 +141,55 @@ Completed:    No
 				t.Errorf("Expect %s got %s\n", tc.expOut, out.String())
 			}
 		})
+	}
+}
+
+// TestAddAction tests the addAction function using a mock server.
+// It verifies that addAction sends the correct request (URL, method, body, and headers)
+// without actually calling the real API. This ensures that our logic is correct
+// before interacting with the actual Task Todo API.
+func TestAddAction(t *testing.T) {
+	expURLPath := "/todo"
+	expMethod := http.MethodPost
+	expBody := "{\"task\":\"Task 1\"}\n"
+	expContentType := "application/json"
+	expOut := "Added task \"Task 1\" to the list.\n"
+	args := []string{"Task", "1"}
+
+	url, cleanup := mockServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != expURLPath {
+			t.Errorf("Expected Path %q, got %q", expURLPath, r.URL.Path)
+		}
+		if r.Method != expMethod {
+			t.Errorf("Expect POST Method, got %q", r.Method)
+		}
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if string(body) != expBody {
+			t.Errorf("Expected body %q, got %q", expBody, string(body))
+		}
+
+		if r.Header.Get("Content-Type") != expContentType {
+			t.Errorf("Expected header to have Content-Type:  %q, got %q", r.Header.Get("Content-Type"), expContentType)
+		}
+		w.WriteHeader(testResp["created"].Status)
+		fmt.Fprintln(w, testResp["created"].Body)
+	})
+
+	defer cleanup()
+
+	var out bytes.Buffer
+
+	endpoint := url + "/todo"
+	err := addAction(&out, endpoint, args)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out.String() != expOut {
+		t.Errorf("Expect %q, got %q", expOut, out.String())
 	}
 }
