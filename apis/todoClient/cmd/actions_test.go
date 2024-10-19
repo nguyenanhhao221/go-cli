@@ -193,3 +193,67 @@ func TestAddAction(t *testing.T) {
 		t.Errorf("Expect %q, got %q", expOut, out.String())
 	}
 }
+
+func TestCompleteAction(t *testing.T) {
+	expURLPath := "/todo/1"
+	expMethod := http.MethodPatch
+	expQuery := "complete"
+	expOut := "Item number 1 marked as completed.\n"
+	arg := "1"
+
+	url, cleanup := mockServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != expURLPath {
+			t.Errorf("Expected Path %q, got %q\n", expURLPath, r.URL.Path)
+		}
+		if r.Method != expMethod {
+			t.Errorf("Expect %q Method, got %q\n", expMethod, r.Method)
+		}
+		if r.URL.Query().Get("complete") != "" {
+			t.Errorf("Expect query to be %q, got %q\n", expQuery, r.URL.Query().Get("complete"))
+		}
+
+		w.WriteHeader(testResp["noContent"].Status)
+		fmt.Fprintln(w, testResp["noContent"].Body)
+	})
+	defer cleanup()
+
+	var out bytes.Buffer
+	err := completeAction(&out, url, arg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if expOut != out.String() {
+		t.Errorf("Expect %q, got %q", expOut, out.String())
+	}
+}
+
+func TestDeleteAction(t *testing.T) {
+	expURLPath := "/todo/1"
+	expMethod := http.MethodDelete
+	expOut := "Item number 1 deleted\n"
+	arg := "1"
+
+	url, cleanup := mockServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != expURLPath {
+			t.Errorf("Expected Path %q, got %q\n", expURLPath, r.URL.Path)
+		}
+		if r.Method != expMethod {
+			t.Errorf("Expect %q Method, got %q\n", expMethod, r.Method)
+		}
+
+		w.WriteHeader(testResp["noContent"].Status)
+		fmt.Fprintln(w, testResp["noContent"].Body)
+	})
+	defer cleanup()
+
+	var out bytes.Buffer
+	err := deleteAction(&out, url, arg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if expOut != out.String() {
+		t.Errorf("Expect %q, got %q", expOut, out.String())
+	}
+}
