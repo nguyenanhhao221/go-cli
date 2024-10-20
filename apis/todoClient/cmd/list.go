@@ -46,7 +46,7 @@ func init() {
 }
 
 func listAction(out io.Writer, url string) error {
-	items, err := getItems(url)
+	items, err := getAll(url)
 	if err != nil {
 		return err
 	}
