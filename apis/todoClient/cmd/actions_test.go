@@ -19,6 +19,7 @@ func TestListAction(t *testing.T) {
 			Body   string
 		}
 		closeServer bool
+		isActive    bool
 	}{
 		{
 			name:     "Results",
@@ -37,6 +38,13 @@ func TestListAction(t *testing.T) {
 			resp:        testResp["noResults"],
 			closeServer: true,
 		},
+		{
+			name:     "ResultOnlyActive",
+			expError: nil,
+			resp:     testResp["resultsManyComplete"],
+			expOut:   "-  2  Task 2\n",
+			isActive: true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -54,7 +62,7 @@ func TestListAction(t *testing.T) {
 
 			var out bytes.Buffer
 
-			err := listAction(&out, url)
+			err := listAction(&out, url, tc.isActive)
 			if tc.expError != nil {
 				if err == nil {
 					t.Fatalf("Expected error %q, no error", tc.expError)

@@ -55,7 +55,7 @@ func TestIntegration(t *testing.T) {
 
 	t.Run("ListTask", func(t *testing.T) {
 		var out bytes.Buffer
-		if err := listAction(&out, apiRoot); err != nil {
+		if err := listAction(&out, apiRoot, false); err != nil {
 			t.Fatal(err)
 		}
 
@@ -112,7 +112,7 @@ func TestIntegration(t *testing.T) {
 
 	t.Run("ListCompletedTask", func(t *testing.T) {
 		var out bytes.Buffer
-		if err := listAction(&out, apiRoot); err != nil {
+		if err := listAction(&out, apiRoot, false); err != nil {
 			t.Fatal(err)
 		}
 		outList := ""
@@ -142,7 +142,7 @@ func TestIntegration(t *testing.T) {
 
 	t.Run("ListDeleteTask", func(t *testing.T) {
 		var out bytes.Buffer
-		if err := listAction(&out, apiRoot); err != nil {
+		if err := listAction(&out, apiRoot, false); err != nil {
 			t.Fatal(err)
 		}
 

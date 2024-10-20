@@ -37,28 +37,36 @@ var listCmd = &cobra.Command{
 	Short: "List Todos",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		apiRoot := viper.GetString("api-root")
-		return listAction(os.Stdout, apiRoot)
+		isActive, err := cmd.Flags().GetBool("active")
+		if err != nil {
+			return err
+		}
+		return listAction(os.Stdout, apiRoot, isActive)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(listCmd)
+	listCmd.Flags().Bool("active", false, "Show only active task")
 }
 
-func listAction(out io.Writer, url string) error {
+func listAction(out io.Writer, url string, isActive bool) error {
 	items, err := getAll(url)
 	if err != nil {
 		return err
 	}
-	return printAll(out, items)
+	return printAll(out, items, isActive)
 }
 
-func printAll(out io.Writer, items []item) error {
+func printAll(out io.Writer, items []item, isActive bool) error {
 	w := tabwriter.NewWriter(out, 3, 2, 0, ' ', 0)
 	for k, v := range items {
 		done := "-"
 		if v.Done {
 			done = "X"
+		}
+		if isActive && v.Done {
+			continue
 		}
 		fmt.Fprintf(w, "%s\t%d\t%s\t\n", done, k+1, v.Task)
 	}
