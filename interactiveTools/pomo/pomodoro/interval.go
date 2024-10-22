@@ -75,6 +75,7 @@ func NewConfig(repo Repository, pomodoro, shortBreak, longBreak time.Duration) *
 	return c
 }
 
+// nextCategory From the Repository determine the NextCategory
 func nextCategory(r Repository) (string, error) {
 	li, err := r.Last()
 	if err != nil && err == ErrNoIntervals {
