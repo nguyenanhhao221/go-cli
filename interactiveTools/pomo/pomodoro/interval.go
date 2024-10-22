@@ -76,28 +76,33 @@ func NewConfig(repo Repository, pomodoro, shortBreak, longBreak time.Duration) *
 }
 
 func nextCategory(r Repository) (string, error) {
-	lastInterval, err := r.Last()
+	li, err := r.Last()
 	if err != nil && err == ErrNoIntervals {
-		return CategoryPomodoro, err
+		return CategoryPomodoro, nil
 	}
 	if err != nil {
 		return "", err
 	}
-	if lastInterval.Category == CategoryLongBreak || lastInterval.Category == CategoryShortBreak {
+
+	if li.Category == CategoryLongBreak || li.Category == CategoryShortBreak {
 		return CategoryPomodoro, nil
 	}
+
 	lastBreaks, err := r.Breaks(3)
 	if err != nil {
 		return "", err
 	}
+
 	if len(lastBreaks) < 3 {
 		return CategoryShortBreak, nil
 	}
+
 	for _, i := range lastBreaks {
 		if i.Category == CategoryLongBreak {
 			return CategoryShortBreak, nil
 		}
 	}
+
 	return CategoryLongBreak, nil
 }
 
@@ -112,12 +117,16 @@ func tick(ctx context.Context, id int64, config *IntervalConfig, start, periodic
 		return err
 	}
 
+	// creates a timer channel using the time.After function.
+	// The time.After function returns a channel that will send the current time after a specified duration.
+	// In this case, the duration is calculated as i.PlannedDuration - i.ActualDuration.
 	expire := time.After(i.PlannedDuration - i.ActualDuration)
 
 	start(i)
 
 	for {
 		select {
+		// For every tick
 		case <-ticker.C:
 			i, err := config.repo.ByID(id)
 			if err != nil {
@@ -156,7 +165,9 @@ func newInterval(config *IntervalConfig) (Interval, error) {
 	if err != nil {
 		return i, err
 	}
+
 	i.Category = category
+
 	switch category {
 	case CategoryPomodoro:
 		i.PlannedDuration = config.PomodoroDuration
@@ -165,21 +176,25 @@ func newInterval(config *IntervalConfig) (Interval, error) {
 	case CategoryLongBreak:
 		i.PlannedDuration = config.LongBreakDuration
 	}
+
 	if i.ID, err = config.repo.Create(i); err != nil {
 		return i, err
 	}
+
 	return i, nil
 }
 
 func GetInterval(config *IntervalConfig) (Interval, error) {
 	i, err := config.repo.Last()
+
 	if err != nil && err != ErrNoIntervals {
 		return i, err
 	}
 
-	if err != nil && i.State != StateCancelled && i.State != StateDone {
+	if err == nil && i.State != StateCancelled && i.State != StateDone {
 		return i, nil
 	}
+
 	return newInterval(config)
 }
 
