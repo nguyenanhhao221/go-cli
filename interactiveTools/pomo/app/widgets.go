@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"time"
 
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/widgets/donut"
@@ -10,112 +11,101 @@ import (
 )
 
 type widgets struct {
-	donTimer       *donut.Donut
-	disType        *segmentdisplay.SegmentDisplay
+	donutTimer     *donut.Donut
+	displayType    *segmentdisplay.SegmentDisplay
 	txtInfo        *text.Text
 	txtTimer       *text.Text
-	updateTxtInfo  chan string
-	updateTxtType  chan string
-	updateTxtTime  chan string
 	updateDonTimer chan []int
+	updateTxtInfo  chan string
+	updateTxtTimer chan string
+	updateTxtType  chan string
 }
 
-func (w *widgets) update(timer []int, txtType, txtInfo, txtTimer string, redrawCh chan<- bool) {
-	if txtInfo != "" {
-		w.updateTxtInfo <- txtInfo
-	}
-
-	if txtType != "" {
-		w.updateTxtType <- txtType
-	}
-
-	if txtTimer != "" {
-		w.updateTxtTime <- txtTimer
-	}
-	if len(timer) > 0 {
-		w.updateDonTimer <- timer
-	}
-	redrawCh <- true
-}
-
-func newWidgets(ctx context.Context, errorCh chan<- error) (*widgets, error) {
+func newWidget(ctx context.Context) (*widgets, error) {
 	w := &widgets{}
 	var err error
-
-	w.updateDonTimer = make(chan []int)
-	w.updateTxtType = make(chan string)
-	w.updateTxtInfo = make(chan string)
-	w.updateTxtTime = make(chan string)
-
-	// w.donTimer, err = newDonut(ctx, w.updateDonTimer, errorCh)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	//
-	// w.txtTimer , err = newText(ctx, w.updateTxtType)
-}
-
-func newText(ctx context.Context, updateText <-chan string, errorCh chan<- error) (*text.Text, error) {
-	txt, err := text.New()
+	// updateText := make(chan string)
+	// errorCh := make(chan error)
+	w.displayType, err = newSegmentDisplay()
 	if err != nil {
 		return nil, err
 	}
-	go func() {
-		for {
-			select {
-			case t := <-updateText:
-				txt.Reset()
-				errorCh <- txt.Write(t)
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
-	return txt, nil
-}
-
-func newDonut(ctx context.Context, donUpdater <-chan []int, errorCh chan<- error) (*donut.Donut, error) {
-	donut, err := donut.New(
-		donut.Clockwise(),
-		donut.CellOpts(cell.FgColor(cell.ColorBlue)),
-	)
+	w.donutTimer, err = newDonut(ctx)
 	if err != nil {
 		return nil, err
 	}
-	go func() {
-		for {
-			select {
-			case d := <-donUpdater:
-				if d[0] < d[1] {
-					errorCh <- donut.Absolute(d[0], d[1])
-				}
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
-	return donut, nil
+
+	return w, nil
 }
 
-func newSegmentDisplay(ctx context.Context, updateText <-chan string, errorCh chan<- error) (*segmentdisplay.SegmentDisplay, error) {
+func newSegmentDisplay() (*segmentdisplay.SegmentDisplay, error) {
 	sd, err := segmentdisplay.New()
 	if err != nil {
 		return nil, err
 	}
-	// Go routine to update the segment display
-	go func() {
-		for {
-			select {
-			case t := <-updateText:
-				if t == "" {
-					t = " "
-				}
-				errorCh <- sd.Write([]*segmentdisplay.TextChunk{segmentdisplay.NewChunk(t)})
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
+	//TODO: update once the implementation for pomodoro is finished
+	// Goroutine to update SegmentDisplay
+	// go func() {
+	// 	for {
+	// 		select {
+	// 		case t := <-updateText:
+	// 			if t == "" {
+	// 				t = " "
+	// 			}
+	//
+	// 			errorCh <- sd.Write([]*segmentdisplay.TextChunk{
+	// 				segmentdisplay.NewChunk(t),
+	// 			})
+	// 		case <-ctx.Done():
+	// 			return
+	// 		}
+	// 	}
+	// }()
 
+	t := "Pomodoro"
+	if err := sd.Write([]*segmentdisplay.TextChunk{
+		segmentdisplay.NewChunk(t),
+	}); err != nil {
+		return nil, err
+	}
 	return sd, nil
+}
+
+func newDonut(ctx context.Context) (*donut.Donut, error) {
+	d, err := donut.New(donut.CellOpts(
+		cell.FgColor(cell.ColorNumber(33))),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	const start = 35
+	progress := start
+
+	go periodic(ctx, 500*time.Millisecond, func() error {
+		if err := d.Percent(progress); err != nil {
+			return err
+		}
+		progress++
+		if progress > 100 {
+			progress = start
+		}
+		return nil
+	})
+	return d, nil
+}
+
+func periodic(ctx context.Context, interval time.Duration, fn func() error) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			if err := fn(); err != nil {
+				panic(err)
+			}
+		case <-ctx.Done():
+			return
+		}
+	}
 }

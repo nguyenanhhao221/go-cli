@@ -1,12 +1,10 @@
 package app
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/widgets/button"
-	"haonguyen.tech/interactiveTools/pomo/pomodoro"
 )
 
 type buttonSet struct {
@@ -14,63 +12,27 @@ type buttonSet struct {
 	btPause *button.Button
 }
 
-func newButtonSet(ctx context.Context, config *pomodoro.IntervalConfig, w *widgets, redDrawCh chan<- bool, errorCh chan<- error) (*buttonSet, error) {
-	startInterval := func() {
-		i, err := pomodoro.GetInterval(config)
-		errorCh <- err
-		start := func(i pomodoro.Interval) {
-			message := "Take a break"
-			if i.Category == pomodoro.CategoryPomodoro {
-				message = "Focus on your task"
-			}
-			w.update([]int{}, i.Category, message, "", redDrawCh)
-		}
-
-		end := func(pomodoro.Interval) {
-			w.update([]int{}, "", "Nothing running...", "", redDrawCh)
-		}
-
-		periodic := func(i pomodoro.Interval) {
-			w.update(
-				[]int{int(i.ActualDuration), int(i.PlannedDuration)},
-				"", "",
-				fmt.Sprint(i.PlannedDuration-i.ActualDuration),
-				redDrawCh,
-			)
-		}
-		errorCh <- i.Start(ctx, config, start, periodic, end)
-	}
-
-	pauseInterval := func() {
-		i, err := pomodoro.GetInterval(config)
-		if err != nil {
-			errorCh <- err
-			return
-		}
-		if err := i.Pause(config); err != nil {
-			if err == pomodoro.ErrIntervalNotRunning {
-				return
-			}
-			errorCh <- err
-			return
-		}
-		w.update([]int{}, "", "Paused...press start to continue", "", redDrawCh)
-	}
-	btStart, err := button.New("(s)tart", func() error {
-		go startInterval()
+func newButtons() (*buttonSet, error) {
+	startB, err := button.New("(s)tart", func() error {
 		return nil
-	}, button.GlobalKey('s'), button.WidthFor("(p)ause"), button.Height(2))
+	},
+		button.GlobalKey('s'),
+		button.WidthFor("(s)tart"),
+	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("newButtons: %w", err)
 	}
 
-	btPause, err := button.New("(p)ause", func() error {
-		go pauseInterval()
+	pauseB, err := button.New("(p)ause", func() error {
 		return nil
-	}, button.FillColor(cell.ColorNumber(220)), button.GlobalKey('p'), button.Height(2))
+	},
+		button.GlobalKey('p'),
+		button.WidthFor("(p)ause"),
+		button.FillColor(cell.ColorNumber(220)),
+	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("newButtons: %w", err)
 	}
 
-	return &buttonSet{btStart, btPause}, nil
+	return &buttonSet{btStart: startB, btPause: pauseB}, nil
 }
