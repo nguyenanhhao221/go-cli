@@ -46,12 +46,8 @@ func New() (*App, error) {
 }
 
 func (a *App) Run() error {
-	// TODO temporary to prevent error when quit need to find a better way
-	defer func() {
-		time.Sleep(100 * time.Millisecond) // Allow Termdash to finish processing
-		a.controller.Close()
-		a.terminal.Close()
-	}()
+	defer a.terminal.Close()
+	defer a.controller.Close()
 
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
