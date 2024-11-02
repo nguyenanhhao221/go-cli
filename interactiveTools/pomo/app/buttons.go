@@ -42,6 +42,20 @@ func newButtons(ctx context.Context, config *pomodoro.IntervalConfig,
 
 		errorCh <- i.Start(ctx, config, start, periodic, end)
 	}
+
+	// Trigger when pause button is clicked
+	pauseInterval := func() {
+		i, err := pomodoro.GetInterval(config)
+		errorCh <- err
+		if err := i.Pause(config); err != nil {
+			if err == pomodoro.ErrIntervalNotRunning {
+				return
+			}
+			errorCh <- err
+		}
+		w.updateWidgets(redrawCh, "Paused, press (s)tart to continue...", "", "", []int{})
+	}
+
 	startB, err := button.New("(s)tart", func() error {
 		go startInterval()
 		return nil
@@ -54,6 +68,7 @@ func newButtons(ctx context.Context, config *pomodoro.IntervalConfig,
 	}
 
 	pauseB, err := button.New("(p)ause", func() error {
+		go pauseInterval()
 		return nil
 	},
 		button.GlobalKey('p'),
