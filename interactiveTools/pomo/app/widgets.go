@@ -20,7 +20,7 @@ type widgets struct {
 	updateTxtType  chan string
 }
 
-func (w *widgets) updateWidgets(redrawCh chan<- bool, txtInfo, txtType string) {
+func (w *widgets) updateWidgets(redrawCh chan<- bool, txtInfo, txtType string, timer []int) {
 	if txtInfo != "" {
 		w.updateTxtInfo <- txtInfo
 	}
@@ -28,6 +28,11 @@ func (w *widgets) updateWidgets(redrawCh chan<- bool, txtInfo, txtType string) {
 	if txtType != "" {
 		w.updateTxtType <- txtType
 	}
+
+	if len(timer) > 0 {
+		w.updateDonTimer <- timer
+	}
+
 	redrawCh <- true
 }
 
@@ -43,7 +48,7 @@ func newWidget(ctx context.Context, errorCh chan<- error) (*widgets, error) {
 	if err != nil {
 		return nil, err
 	}
-	w.donutTimer, err = newDonut(ctx)
+	w.donutTimer, err = newDonut(ctx, w.updateDonTimer, errorCh)
 	if err != nil {
 		return nil, err
 	}
@@ -82,21 +87,30 @@ func newSegmentDisplay(ctx context.Context, updateText <-chan string, errorCh ch
 	return sd, nil
 }
 
-func newDonut(ctx context.Context) (*donut.Donut, error) {
-	d, err := donut.New(donut.CellOpts(
-		cell.FgColor(cell.ColorNumber(33))),
+func newDonut(ctx context.Context, donUpdater <-chan []int, errorCh chan<- error) (*donut.Donut, error) {
+	don, err := donut.New(
+		donut.Clockwise(),
+		donut.CellOpts(
+			cell.FgColor(cell.ColorNumber(33))),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	const start = 35
-	progress := start
+	go func() {
+		for {
+			select {
+			case d := <-donUpdater:
+				if d[0] <= d[1] {
+					errorCh <- don.Absolute(d[0], d[1])
+				}
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
 
-	if err := d.Percent(progress); err != nil {
-		return nil, err
-	}
-	return d, nil
+	return don, nil
 }
 
 func newText(

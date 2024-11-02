@@ -28,15 +28,15 @@ func newButtons(ctx context.Context, config *pomodoro.IntervalConfig,
 				message = "Focus on your task"
 			}
 
-			w.updateWidgets(redrawCh, message, i.Category)
+			w.updateWidgets(redrawCh, message, i.Category, []int{})
 		}
 
 		periodic := func(i pomodoro.Interval) {
-			w.updateWidgets(redrawCh, "", "")
+			w.updateWidgets(redrawCh, "", "", []int{int(i.ActualDuration), int(i.PlannedDuration)})
 		}
 
 		end := func(pomodoro.Interval) {
-			w.updateWidgets(redrawCh, "Nothing running...", i.Category)
+			w.updateWidgets(redrawCh, "Nothing running...", i.Category, []int{})
 		}
 
 		errorCh <- i.Start(ctx, config, start, periodic, end)
