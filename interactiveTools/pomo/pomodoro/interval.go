@@ -199,7 +199,9 @@ func GetInterval(config *IntervalConfig) (Interval, error) {
 	return newInterval(config)
 }
 
-func (i Interval) Start(ctx context.Context, config *IntervalConfig, start, periodic, end Callback) error {
+func (i Interval) Start(ctx context.Context, config *IntervalConfig,
+	start, periodic, end Callback,
+) error {
 	switch i.State {
 	case StateRunning:
 		return nil

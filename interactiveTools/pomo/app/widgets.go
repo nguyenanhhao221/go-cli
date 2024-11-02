@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"time"
 
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/widgets/donut"
@@ -21,12 +20,26 @@ type widgets struct {
 	updateTxtType  chan string
 }
 
-func newWidget(ctx context.Context) (*widgets, error) {
+func (w *widgets) updateWidgets(redrawCh chan<- bool, txtInfo, txtType string) {
+	if txtInfo != "" {
+		w.updateTxtInfo <- txtInfo
+	}
+
+	if txtType != "" {
+		w.updateTxtType <- txtType
+	}
+	redrawCh <- true
+}
+
+func newWidget(ctx context.Context, errorCh chan<- error) (*widgets, error) {
 	w := &widgets{}
 	var err error
-	// updateText := make(chan string)
-	// errorCh := make(chan error)
-	w.displayType, err = newSegmentDisplay()
+	w.updateDonTimer = make(chan []int)
+	w.updateTxtType = make(chan string)
+	w.updateTxtInfo = make(chan string)
+	w.updateTxtTimer = make(chan string)
+
+	w.displayType, err = newSegmentDisplay(ctx, w.updateTxtType, errorCh)
 	if err != nil {
 		return nil, err
 	}
@@ -35,39 +48,37 @@ func newWidget(ctx context.Context) (*widgets, error) {
 		return nil, err
 	}
 
+	w.txtInfo, err = newText(ctx, w.updateTxtInfo, errorCh)
+	if err != nil {
+		return nil, err
+	}
+
 	return w, nil
 }
 
-func newSegmentDisplay() (*segmentdisplay.SegmentDisplay, error) {
+func newSegmentDisplay(ctx context.Context, updateText <-chan string, errorCh chan<- error) (*segmentdisplay.SegmentDisplay, error) {
 	sd, err := segmentdisplay.New()
 	if err != nil {
 		return nil, err
 	}
-	//TODO: update once the implementation for pomodoro is finished
 	// Goroutine to update SegmentDisplay
-	// go func() {
-	// 	for {
-	// 		select {
-	// 		case t := <-updateText:
-	// 			if t == "" {
-	// 				t = " "
-	// 			}
-	//
-	// 			errorCh <- sd.Write([]*segmentdisplay.TextChunk{
-	// 				segmentdisplay.NewChunk(t),
-	// 			})
-	// 		case <-ctx.Done():
-	// 			return
-	// 		}
-	// 	}
-	// }()
+	go func() {
+		for {
+			select {
+			case t := <-updateText:
+				if t == "" {
+					t = " "
+				}
 
-	t := "Pomodoro"
-	if err := sd.Write([]*segmentdisplay.TextChunk{
-		segmentdisplay.NewChunk(t),
-	}); err != nil {
-		return nil, err
-	}
+				errorCh <- sd.Write([]*segmentdisplay.TextChunk{
+					segmentdisplay.NewChunk(t),
+				})
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
 	return sd, nil
 }
 
@@ -82,30 +93,30 @@ func newDonut(ctx context.Context) (*donut.Donut, error) {
 	const start = 35
 	progress := start
 
-	go periodic(ctx, 500*time.Millisecond, func() error {
-		if err := d.Percent(progress); err != nil {
-			return err
-		}
-		progress++
-		if progress > 100 {
-			progress = start
-		}
-		return nil
-	})
+	if err := d.Percent(progress); err != nil {
+		return nil, err
+	}
 	return d, nil
 }
 
-func periodic(ctx context.Context, interval time.Duration, fn func() error) {
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C:
-			if err := fn(); err != nil {
-				panic(err)
-			}
-		case <-ctx.Done():
-			return
-		}
+func newText(
+	ctx context.Context, updateText <-chan string, errorCh chan<- error,
+) (*text.Text, error) {
+	txt, err := text.New()
+	if err != nil {
+		return nil, err
 	}
+
+	go func() {
+		for {
+			select {
+			case t := <-updateText:
+				txt.Reset()
+				errorCh <- txt.Write(t)
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+	return txt, nil
 }

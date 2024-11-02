@@ -8,15 +8,16 @@ import (
 	"github.com/mum4k/termdash/container/grid"
 	"github.com/mum4k/termdash/linestyle"
 	"github.com/mum4k/termdash/terminal/terminalapi"
+	"haonguyen.tech/interactiveTools/pomo/pomodoro"
 )
 
 // newGrid Get the container and define the layout for widgets
-func newGrid(ctx context.Context, t terminalapi.Terminal) (*container.Container, error) {
-	widgets, err := newWidget(ctx)
+func newGrid(ctx context.Context, t terminalapi.Terminal, config *pomodoro.IntervalConfig, errorCh chan error, redrawCh chan<- bool) (*container.Container, error) {
+	widgets, err := newWidget(ctx, errorCh)
 	if err != nil {
 		return nil, err
 	}
-	b, err := newButtons()
+	b, err := newButtons(ctx, config, widgets, errorCh, redrawCh)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +45,7 @@ func newGrid(ctx context.Context, t terminalapi.Terminal) (*container.Container,
 				grid.RowHeightPerc(70, grid.Widget(widgets.displayType,
 					container.Border(linestyle.Light))),
 				// The message
-				grid.RowHeightPerc(25, grid.Widget(widgets.displayType,
+				grid.RowHeightPerc(25, grid.Widget(widgets.txtInfo,
 					container.AlignHorizontal(align.HorizontalCenter),
 					container.Border(linestyle.Light))),
 			),
