@@ -27,17 +27,26 @@ func newGrid(ctx context.Context, t terminalapi.Terminal, config *pomodoro.Inter
 	// First row
 	builder.Add(
 		grid.RowHeightPerc(70,
-			grid.ColWidthPercWithOpts(
-				60,
+			grid.ColWidthPercWithOpts(60,
 				[]container.Option{
 					container.AlignHorizontal(align.HorizontalCenter),
-				},
-				grid.RowHeightPerc(25, grid.Widget(widgets.donutTimer,
 					container.BorderTitle("Press Q to quit"),
-					container.Border(linestyle.Light))),
+					container.Border(linestyle.Light),
+				},
+				grid.RowHeightPerc(70,
+					grid.Widget(widgets.donutTimer,
+						container.AlignHorizontal(align.HorizontalCenter),
+						container.AlignVertical(align.VerticalMiddle),
+					)),
+				grid.RowHeightPercWithOpts(30,
+					[]container.Option{
+						container.PaddingLeftPercent(49),
+					},
+					grid.Widget(widgets.txtTimer,
+						container.AlignVertical(align.VerticalMiddle),
+					)),
 			),
-			grid.ColWidthPercWithOpts(
-				40,
+			grid.ColWidthPercWithOpts(40,
 				[]container.Option{
 					container.AlignHorizontal(align.HorizontalCenter),
 				},

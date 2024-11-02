@@ -20,13 +20,17 @@ type widgets struct {
 	updateTxtType  chan string
 }
 
-func (w *widgets) updateWidgets(redrawCh chan<- bool, txtInfo, txtType string, timer []int) {
+func (w *widgets) updateWidgets(redrawCh chan<- bool, txtInfo, txtType, txtTimer string, timer []int) {
 	if txtInfo != "" {
 		w.updateTxtInfo <- txtInfo
 	}
 
 	if txtType != "" {
 		w.updateTxtType <- txtType
+	}
+
+	if txtTimer != "" {
+		w.updateTxtTimer <- txtTimer
 	}
 
 	if len(timer) > 0 {
@@ -54,6 +58,11 @@ func newWidget(ctx context.Context, errorCh chan<- error) (*widgets, error) {
 	}
 
 	w.txtInfo, err = newText(ctx, w.updateTxtInfo, errorCh)
+	if err != nil {
+		return nil, err
+	}
+
+	w.txtTimer, err = newText(ctx, w.updateTxtTimer, errorCh)
 	if err != nil {
 		return nil, err
 	}
@@ -90,8 +99,8 @@ func newSegmentDisplay(ctx context.Context, updateText <-chan string, errorCh ch
 func newDonut(ctx context.Context, donUpdater <-chan []int, errorCh chan<- error) (*donut.Donut, error) {
 	don, err := donut.New(
 		donut.Clockwise(),
-		donut.CellOpts(
-			cell.FgColor(cell.ColorNumber(33))),
+		donut.CellOpts(cell.FgColor(cell.ColorBlue)),
+		donut.HideTextProgress(),
 	)
 	if err != nil {
 		return nil, err
