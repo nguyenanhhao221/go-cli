@@ -18,6 +18,7 @@ type buttonSet struct {
 func newButtons(ctx context.Context, config *pomodoro.IntervalConfig,
 	w *widgets, errorCh chan error, redrawCh chan<- bool,
 ) (*buttonSet, error) {
+	// Trigger when "start" button is clicked
 	startInterval := func() {
 		i, err := pomodoro.GetInterval(config)
 		errorCh <- err
