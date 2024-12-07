@@ -32,3 +32,4 @@ performance/colStats/cpu02.pprof
 apis/todoClient/todoClient
 apis/todoServer/todoServer
 interactiveTools/pomo/pomo
+interactiveTools/pomo/pomo.db
